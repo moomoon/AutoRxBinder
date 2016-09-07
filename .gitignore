@@ -9,4 +9,5 @@
 /.idea
 /app/build
 /rxbinder/build
+/projectFilesBackup/
 .externalNativeBuild
