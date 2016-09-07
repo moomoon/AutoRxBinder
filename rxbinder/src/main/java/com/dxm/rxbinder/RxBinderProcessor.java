@@ -16,6 +16,7 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
+import javax.tools.Diagnostic;
 
 import javafx.util.Pair;
 
@@ -23,7 +24,7 @@ import javafx.util.Pair;
  * Created by ants on 9/5/16.
  */
 @AutoService(Processor.class)
-@SupportedAnnotationTypes("com.dxm.rxbinder.*")
+@SupportedAnnotationTypes("com.dxm.rxbinder.annotations.*")
 public class RxBinderProcessor extends AbstractProcessor {
 
     @Override
@@ -37,7 +38,7 @@ public class RxBinderProcessor extends AbstractProcessor {
             try {
                 JavaFile.builder(packageAndType.getKey(), packageAndType.getValue().build()).build().writeTo(processingEnv.getFiler());
             } catch (IOException e) {
-                e.printStackTrace();
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "error when writing file: " + e.getLocalizedMessage());
             }
         }
         return true;

@@ -19,6 +19,5 @@ public interface RxProcessor {
 
     List<RxProcessor> ALL = new ArrayList<RxProcessor>() {{
         add(new RxBindProcessor());
-//        add(new RxObservableProcessor());
     }};
 }

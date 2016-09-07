@@ -1,4 +1,4 @@
-package org.dxm.aptest;
+package org.dxm.example;
 
 import org.junit.Test;
 
