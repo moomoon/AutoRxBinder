@@ -1,6 +1,9 @@
 package com.dxm.rxbinder;
 
+import com.google.common.base.CaseFormat;
+import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
 import java.util.HashSet;
@@ -47,20 +50,20 @@ public class Utils {
         }
     }
 
-    public static Pair<String, TypeSpec.Builder> findOrCreateBinderBuilder(Map<TypeMirror, Pair<String, TypeSpec.Builder>> map, TypeElement type) {
+    public static Pair<String, TypeSpec.Builder> findOrCreateBindingBuilder(Map<TypeMirror, Pair<String, TypeSpec.Builder>> map, TypeElement type) {
         TypeMirror mirror = type.asType();
         Pair<String, TypeSpec.Builder> packageAndBuilder = map.get(mirror);
         if (null == packageAndBuilder) {
             String packageName = findPackage(type).getQualifiedName().toString();
-            TypeSpec.Builder builder = TypeSpec.classBuilder(binderEnclosingClassNameFor(type.getSimpleName().toString())).addModifiers(Modifier.FINAL, Modifier.PUBLIC);
+            TypeSpec.Builder builder = TypeSpec.classBuilder(bindingContainerClassNameFor(type.getSimpleName().toString())).addModifiers(Modifier.FINAL, Modifier.PUBLIC);
             packageAndBuilder = new Pair<>(packageName, builder);
             map.put(mirror, packageAndBuilder);
         }
         return packageAndBuilder;
     }
 
-    private static String binderEnclosingClassNameFor(String className) {
-        return "Rx" + className + "Bindings";
+    private static String bindingContainerClassNameFor(String className) {
+        return CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_CAMEL, className) + "Bindings";
     }
 
     public static TypeElement findTopLevelType(ExecutableElement methodElement) {
@@ -98,15 +101,31 @@ public class Utils {
         }
     }
 
-    public static String binderClassNameFor(String name) {
-        return LOWER_CAMEL.to(UPPER_CAMEL, name) + "Binder";
+    public static String bindingClassNameFor(String name) {
+        return LOWER_CAMEL.to(UPPER_CAMEL, name) + "Binding";
     }
 
-    public static String binderMethodNameFor(String name) {
+    public static String bindingMethodNameFor(String name) {
         return name;
     }
 
     public static String defaultVariableName(TypeElement element) {
         return UPPER_CAMEL.to(LOWER_CAMEL, element.getSimpleName().toString());
+    }
+
+    public static ClassName readTypeNameFromName(String name) {
+        String[] classes = name.split("\\$");
+        int packageDelimeter = classes[0].lastIndexOf('.');
+        if (packageDelimeter < 0) {
+            return null;
+        }
+        String packageName = classes[0].substring(0, packageDelimeter);
+        String simpleName = classes[0].substring(packageDelimeter + 1, classes[0].length());
+        if (classes.length == 1) {
+            return ClassName.get(packageName, simpleName);
+        }
+        String[] simpleNames = new String[classes.length - 1];
+        System.arraycopy(classes, 1, simpleNames, 0, simpleName.length());
+        return ClassName.get(packageName, simpleName, simpleNames);
     }
 }

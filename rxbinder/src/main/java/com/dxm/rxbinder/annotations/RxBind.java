@@ -12,4 +12,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 public @interface RxBind {
     String name() default "";
+
+    String exception() default "java.lang.RuntimeException";
 }

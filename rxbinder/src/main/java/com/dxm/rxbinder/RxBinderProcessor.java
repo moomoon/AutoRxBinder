@@ -32,7 +32,11 @@ public class RxBinderProcessor extends AbstractProcessor {
         final Map<TypeMirror, Pair<String, TypeSpec.Builder>> builders = new LinkedHashMap<TypeMirror, Pair<String, TypeSpec.Builder>>();
         final Context context = new Context(processingEnv, roundEnv);
         for (RxProcessor p: RxProcessor.ALL) {
-            p.process(builders, context);
+            try {
+                p.process(builders, context);
+            } catch (Exception e) {
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, e.getLocalizedMessage());
+            }
         }
         for (Pair<String, TypeSpec.Builder> packageAndType : builders.values()) {
             try {

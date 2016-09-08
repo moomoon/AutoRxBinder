@@ -5,7 +5,8 @@ import com.dxm.rxbinder.Utils;
 import com.dxm.rxbinder.annotations.Partial;
 import com.dxm.rxbinder.annotations.RxBind;
 import com.dxm.rxbinder.rx.RxActionBuilder;
-import com.dxm.rxbinder.rx.RxBinderBuilder;
+import com.dxm.rxbinder.rx.RxBindTarget;
+import com.dxm.rxbinder.rx.RxBindingBuilder;
 import com.dxm.rxbinder.rx.RxFuncBuilder;
 import com.google.common.base.CaseFormat;
 import com.squareup.javapoet.ClassName;
@@ -34,7 +35,7 @@ import static com.dxm.rxbinder.Utils.deduplicateName;
 import static com.dxm.rxbinder.Utils.deduplicateNestedClassName;
 import static com.dxm.rxbinder.Utils.defaultVariableName;
 import static com.dxm.rxbinder.Utils.findEnclosingType;
-import static com.dxm.rxbinder.Utils.findOrCreateBinderBuilder;
+import static com.dxm.rxbinder.Utils.findOrCreateBindingBuilder;
 import static com.dxm.rxbinder.Utils.findTopLevelType;
 import javafx.util.Pair;
 
@@ -49,45 +50,46 @@ public class RxBindProcessor implements RxProcessor {
             if (element.getKind() != ElementKind.METHOD) return;
             RxBind bind = element.getAnnotation(RxBind.class);
             final ExecutableElement methodElement = (ExecutableElement) element;
+            final RxBindTarget target = new RxBindTarget(bind, methodElement);
             final TypeElement type = findTopLevelType(methodElement);
-            final Pair<String, TypeSpec.Builder> packageAndTypeBuilder = findOrCreateBinderBuilder(builders, type);
-            final Pair<MethodSpec, TypeSpec> binding = createBinding(bind, methodElement, packageAndTypeBuilder.getValue().build(), context);
+            final Pair<String, TypeSpec.Builder> packageAndTypeBuilder = findOrCreateBindingBuilder(builders, type);
+            final Pair<MethodSpec, TypeSpec> binding = createBinding(packageAndTypeBuilder.getValue().build(), target, context);
             packageAndTypeBuilder.getValue().addType(binding.getValue());
             packageAndTypeBuilder.getValue().addMethod(binding.getKey());
         }
     }
 
-    private static Pair<MethodSpec, TypeSpec> createBinding(RxBind bind, ExecutableElement bindingMethod, TypeSpec containerClass, Context context) {
-        final String name = bind.name();
-        String binderClassName = name.isEmpty() ? binderClassNameFor(bind, bindingMethod) : Utils.binderClassNameFor(name);
-        String binderMethodName = name.isEmpty() ? binderMethodNameFor(bind, bindingMethod) : Utils.binderMethodNameFor(name);
+    private static Pair<MethodSpec, TypeSpec> createBinding(TypeSpec containerClass, RxBindTarget target, Context context) {
+        final String name = target.getBind().name();
+        String binderClassName = name.isEmpty() ? bindingClassNameFor(target) : Utils.bindingClassNameFor(name);
+        String binderMethodName = name.isEmpty() ? bindingMethodNameFor(target) : Utils.bindingMethodNameFor(name);
         binderClassName = deduplicateNestedClassName(containerClass, binderClassName);
         binderMethodName = deduplicateMethodName(containerClass, binderMethodName);
-        Pair<TypeSpec, TypeName> binderClassAndSuperInterface = buildBinderClass(binderClassName, bindingMethod, context);
-        MethodSpec method = binderMethod(binderMethodName, bindingMethod, binderClassAndSuperInterface.getKey(), binderClassAndSuperInterface.getValue());
+        Pair<TypeSpec, TypeName> binderClassAndSuperInterface = buildBindingClass(binderClassName, target, context);
+        MethodSpec method = bindingMethod(binderMethodName, binderClassAndSuperInterface.getKey(), binderClassAndSuperInterface.getValue(), target);
         return new Pair<>(method, binderClassAndSuperInterface.getKey());
     }
 
-    private static Pair<TypeSpec, TypeName> buildBinderClass(String name, ExecutableElement bindingMethod, Context context) {
-        final RxBinderBuilder builder;
-        if (bindingMethod.getReturnType().getKind().equals(TypeKind.VOID)) {
-            builder = new RxActionBuilder(name, bindingMethod, context);
+    private static Pair<TypeSpec, TypeName> buildBindingClass(String name, RxBindTarget target, Context context) {
+        final RxBindingBuilder builder;
+        if (target.getMethod().getReturnType().getKind().equals(TypeKind.VOID)) {
+            builder = new RxActionBuilder(name, target);
         } else {
-            builder = new RxFuncBuilder(name, bindingMethod, context);
+            builder = new RxFuncBuilder(name, target);
         }
-        return new Pair<>(builder.typeSpecBuilder().build(), builder.superInterface());
+        return new Pair<>(builder.typeSpecBuilder(context).build(), builder.superInterface());
     }
 
-    private static MethodSpec binderMethod(String name, ExecutableElement bindingMethod, TypeSpec binderClass, TypeName superInterface) {
+    private static MethodSpec bindingMethod(String name, TypeSpec bindingClass, TypeName superInterface, RxBindTarget target) {
         StringBuilder sb = new StringBuilder("return new $N(");
         MethodSpec.Builder builder = MethodSpec.methodBuilder(name)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(superInterface);
         List<Object> obj = new ArrayList<>();
-        obj.add(binderClass);
+        obj.add(bindingClass);
         Set<String> names = new HashSet<>();
-        if (!bindingMethod.getModifiers().contains(Modifier.STATIC)) {
-            TypeElement enclosingType = findEnclosingType(bindingMethod);
+        if (!target.getMethod().getModifiers().contains(Modifier.STATIC)) {
+            TypeElement enclosingType = findEnclosingType(target.getMethod());
             String varName = defaultVariableName(enclosingType);
             names.add(varName);
             ParameterSpec param = ParameterSpec.builder(ClassName.get(enclosingType), varName).build();
@@ -95,7 +97,7 @@ public class RxBindProcessor implements RxProcessor {
             sb.append("$N");
             obj.add(param);
         }
-        for (VariableElement methodParam : bindingMethod.getParameters()) {
+        for (VariableElement methodParam : target.getMethod().getParameters()) {
             if (null == methodParam.getAnnotation(Partial.class)) continue;
             if (obj.size() > 1) {
                 sb.append(", ");
@@ -111,12 +113,12 @@ public class RxBindProcessor implements RxProcessor {
         return builder.addStatement(sb.toString(), obj.toArray()).build();
     }
 
-    private static String binderClassNameFor(RxBind bind, ExecutableElement method) {
-        return CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_CAMEL, method.getSimpleName().toString()) + "Binder";
+    private static String bindingClassNameFor(RxBindTarget target) {
+        return CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_CAMEL, target.getMethod().getSimpleName().toString()) + "Binder";
     }
 
-    private static String binderMethodNameFor(RxBind bind, ExecutableElement method) {
-        return method.getSimpleName().toString();
+    private static String bindingMethodNameFor(RxBindTarget target) {
+        return target.getMethod().getSimpleName().toString();
     }
 
 }
