@@ -1,4 +1,6 @@
 apply plugin: 'java'
+apply plugin: 'maven-publish'
+
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
@@ -11,5 +13,8 @@ dependencies {
 
 }
 
+
 sourceCompatibility = "1.7"
 targetCompatibility = "1.7"
+
+apply from: rootProject.file('gradle/gradle-mvn-push.gradle')

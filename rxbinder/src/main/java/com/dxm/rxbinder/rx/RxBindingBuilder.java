@@ -135,7 +135,6 @@ public abstract class RxBindingBuilder {
         for (TypeMirror superType : types.directSupertypes(type)) {
             TypeElement superElement = (TypeElement) types.asElement(superType);
             if (superElement.getKind() != ElementKind.CLASS) continue;
-            context.getProcessingEnvironment().getMessager().printMessage(Diagnostic.Kind.NOTE, "" + throwable.getQualifiedName().toString());
             return shouldBeCaught(superType, context);
         }
         return false;
