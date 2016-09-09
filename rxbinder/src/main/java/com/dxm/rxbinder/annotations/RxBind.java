@@ -13,5 +13,6 @@ import java.lang.annotation.Target;
 public @interface RxBind {
     String name() default "";
 
-    String exception() default "java.lang.RuntimeException";
+    Class<? extends RuntimeException> exception() default RuntimeException.class;
+
 }

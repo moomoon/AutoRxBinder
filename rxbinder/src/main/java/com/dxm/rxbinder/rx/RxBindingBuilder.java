@@ -26,6 +26,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.MirroredTypeException;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
@@ -110,9 +111,11 @@ public abstract class RxBindingBuilder {
     }
 
     private static TryBlock tryBlock(RxBindTarget target, Context context) {
-        final ClassName exception = readTypeNameFromName(target.getBind().exception());
-        if (null == exception) {
-            throw new RuntimeException("" + target.getBind().exception() + " is not a valid class name. Use the class name returned from Foo.class.getName().");
+        TypeName exception;
+        try {
+            exception = ClassName.get(target.getBind().exception());
+        } catch (MirroredTypeException e) {
+            exception = ClassName.get(e.getTypeMirror());
         }
         final TryBlock.Builder blockBuilder = TryBlock.builder();
         for (TypeMirror throwableType : target.getMethod().getThrownTypes()) {

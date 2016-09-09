@@ -3,6 +3,7 @@ package com.dxm.rxbinder;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.TypeName;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,9 +42,9 @@ public class TryBlock {
 
     public  static class CatchBlock {
         private final TypeElement thrownException;
-        private final ClassName wrapper;
+        private final TypeName wrapper;
 
-        private CatchBlock(TypeElement thrownException, ClassName wrapper) {
+        private CatchBlock(TypeElement thrownException, TypeName wrapper) {
             this.thrownException = thrownException;
             this.wrapper = wrapper;
         }
@@ -59,7 +60,7 @@ public class TryBlock {
     public static class Builder {
         private List<CatchBlock> catchBlocks = new ArrayList<>();
 
-        public Builder addCatch(TypeElement throwException, ClassName wrapper) {
+        public Builder addCatch(TypeElement throwException, TypeName wrapper) {
             catchBlocks.add(new CatchBlock(throwException, wrapper));
             return this;
         }
