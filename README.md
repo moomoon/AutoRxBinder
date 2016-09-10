@@ -60,15 +60,4 @@ apt 'com.github.moomoon:AutoRxBinder:0.1.0'
 provided 'com.github.moomoon:AutoRxBinder:0.1.0'
 ```
 
-In your project gradle file:
-
-    repositories {
-        maven {
-            url 'http://oss.sonatype.org/content/repositories/public'
-        }
-    }
-
-
-
-
 
