@@ -51,13 +51,13 @@ public void baz() {
 ##Setup
 In your module gradle dependencies:
 ```groovy
-apt 'com.github.moomoon:AutoRxBinder:0.1.0'
-compileOnly 'com.github.moomoon:AutoRxBinder:0.1.0'
+apt 'com.github.moomoon:AutoRxBinder:0.1.1'
+compileOnly 'com.github.moomoon:AutoRxBinder:0.1.1'
 ```
 If you are using Android Studio, use: 
 ```groovy
-apt 'com.github.moomoon:AutoRxBinder:0.1.0'
-provided 'com.github.moomoon:AutoRxBinder:0.1.0'
+apt 'com.github.moomoon:AutoRxBinder:0.1.1'
+provided 'com.github.moomoon:AutoRxBinder:0.1.1'
 ```
 
 
