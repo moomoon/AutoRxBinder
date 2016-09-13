@@ -30,6 +30,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.tools.Diagnostic;
 
 import static com.dxm.rxbinder.Utils.deduplicateMethodName;
 import static com.dxm.rxbinder.Utils.deduplicateName;
@@ -47,7 +48,7 @@ public class RxBindProcessor implements RxProcessor {
 
     @Override
     public void process(Map<TypeMirror, Pair<String, TypeSpec.Builder>> builders, Context context) {
-        for (Element element: context.getRoundEnvironment().getElementsAnnotatedWith(RxBind.class)) {
+        for (Element element : context.getRoundEnvironment().getElementsAnnotatedWith(RxBind.class)) {
             if (element.getKind() != ElementKind.METHOD) return;
             RxBind bind = element.getAnnotation(RxBind.class);
             final ExecutableElement methodElement = (ExecutableElement) element;
@@ -68,18 +69,30 @@ public class RxBindProcessor implements RxProcessor {
         binderMethodName = deduplicateMethodName(containerClass, binderMethodName);
         RxBindingBuilder builder = RxBindingBuilder.from(binderClassName, target);
         TypeSpec bindingClass = builder.typeSpecBuilder(context).build();
-        MethodSpec method = bindingMethod(binderMethodName, bindingClass, builder.superInterface(), builder.typeVariables(), target);
+        MethodSpec method = bindingMethod(binderMethodName, bindingClass, builder.superInterface(), target, context);
         return new Pair<>(method, bindingClass);
     }
 
 
-    private static MethodSpec bindingMethod(String name, TypeSpec bindingClass, TypeName superInterface, List<TypeVariableName> typeVariables, RxBindTarget target) {
-        StringBuilder sb = new StringBuilder("return new $N(");
+    private static MethodSpec bindingMethod(String name, TypeSpec bindingClass, TypeName superInterface, RxBindTarget target, Context context) {
+        List<Object> obj = new ArrayList<>();
+        obj.add(bindingClass);
+        final StringBuilder sb = new StringBuilder("return new $N");
+        if (!bindingClass.typeVariables.isEmpty()) {
+            sb.append('<');
+            for (int i = 0; i < bindingClass.typeVariables.size(); i++) {
+                if (i != 0) sb.append(", ");
+                sb.append("$T");
+            }
+            obj.addAll(bindingClass.typeVariables);
+            sb.append('>');
+        }
+        sb.append('(');
+
         MethodSpec.Builder builder = MethodSpec.methodBuilder(name)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(superInterface);
-        List<Object> obj = new ArrayList<>();
-        obj.add(bindingClass);
+        context.getProcessingEnvironment().getMessager().printMessage(Diagnostic.Kind.NOTE, "valiables" + bindingClass.typeVariables);
         Set<String> names = new HashSet<>();
         if (!target.getMethod().getModifiers().contains(Modifier.STATIC)) {
             TypeElement enclosingType = findEnclosingType(target.getMethod());
@@ -103,7 +116,7 @@ public class RxBindProcessor implements RxProcessor {
             obj.add(param);
         }
         sb.append(')');
-        return builder.addStatement(sb.toString(), obj.toArray()).addTypeVariables(typeVariables).build();
+        return builder.addStatement(sb.toString(), obj.toArray()).addTypeVariables(bindingClass.typeVariables).build();
     }
 
     private static String bindingClassNameFor(RxBindTarget target) {
