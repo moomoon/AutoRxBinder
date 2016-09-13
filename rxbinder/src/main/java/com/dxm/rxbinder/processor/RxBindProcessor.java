@@ -14,6 +14,7 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.TypeVariableName;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -65,22 +66,14 @@ public class RxBindProcessor implements RxProcessor {
         String binderMethodName = name.isEmpty() ? bindingMethodNameFor(target) : Utils.bindingMethodNameFor(name);
         binderClassName = deduplicateNestedClassName(containerClass, binderClassName);
         binderMethodName = deduplicateMethodName(containerClass, binderMethodName);
-        Pair<TypeSpec, TypeName> binderClassAndSuperInterface = buildBindingClass(binderClassName, target, context);
-        MethodSpec method = bindingMethod(binderMethodName, binderClassAndSuperInterface.getKey(), binderClassAndSuperInterface.getValue(), target);
-        return new Pair<>(method, binderClassAndSuperInterface.getKey());
+        RxBindingBuilder builder = RxBindingBuilder.from(binderClassName, target);
+        TypeSpec bindingClass = builder.typeSpecBuilder(context).build();
+        MethodSpec method = bindingMethod(binderMethodName, bindingClass, builder.superInterface(), builder.typeVariables(), target);
+        return new Pair<>(method, bindingClass);
     }
 
-    private static Pair<TypeSpec, TypeName> buildBindingClass(String name, RxBindTarget target, Context context) {
-        final RxBindingBuilder builder;
-        if (target.getMethod().getReturnType().getKind().equals(TypeKind.VOID)) {
-            builder = new RxActionBuilder(name, target);
-        } else {
-            builder = new RxFuncBuilder(name, target);
-        }
-        return new Pair<>(builder.typeSpecBuilder(context).build(), builder.superInterface());
-    }
 
-    private static MethodSpec bindingMethod(String name, TypeSpec bindingClass, TypeName superInterface, RxBindTarget target) {
+    private static MethodSpec bindingMethod(String name, TypeSpec bindingClass, TypeName superInterface, List<TypeVariableName> typeVariables, RxBindTarget target) {
         StringBuilder sb = new StringBuilder("return new $N(");
         MethodSpec.Builder builder = MethodSpec.methodBuilder(name)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
@@ -110,7 +103,7 @@ public class RxBindProcessor implements RxProcessor {
             obj.add(param);
         }
         sb.append(')');
-        return builder.addStatement(sb.toString(), obj.toArray()).build();
+        return builder.addStatement(sb.toString(), obj.toArray()).addTypeVariables(typeVariables).build();
     }
 
     private static String bindingClassNameFor(RxBindTarget target) {

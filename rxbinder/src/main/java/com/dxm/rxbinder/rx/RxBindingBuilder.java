@@ -3,8 +3,8 @@ package com.dxm.rxbinder.rx;
 import com.dxm.rxbinder.Context;
 import com.dxm.rxbinder.TryBlock;
 import com.dxm.rxbinder.annotations.Partial;
-import com.dxm.rxbinder.annotations.RxBind;
 import com.google.common.base.CaseFormat;
+import com.google.common.base.Function;
 import com.squareup.javapoet.ArrayTypeName;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
@@ -12,6 +12,7 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.TypeVariableName;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -25,20 +26,18 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.MirroredTypeException;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.type.TypeVariable;
-import javax.lang.model.util.TypeKindVisitor6;
 import javax.lang.model.util.Types;
-import javax.tools.Diagnostic;
 
 import static com.dxm.rxbinder.Utils.deduplicateName;
 import static com.dxm.rxbinder.Utils.defaultVariableName;
 import static com.dxm.rxbinder.Utils.findEnclosingType;
-import static com.dxm.rxbinder.Utils.readTypeNameFromName;
 import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Lists.transform;
 import static com.google.common.collect.Sets.newHashSetWithExpectedSize;
 
 /**
@@ -52,10 +51,19 @@ public abstract class RxBindingBuilder {
     private static final String EXCEPTION_NAME = "java.lang.Exception";
     private static final String OBJECT_NAME = "java.lang.Object";
 
-    public RxBindingBuilder(String name, RxBindTarget target) {
+    protected RxBindingBuilder(String name, RxBindTarget target) {
         this.target = target;
         this.name = name;
     }
+
+    public static RxBindingBuilder from(String name, RxBindTarget target) {
+        if (target.getMethod().getReturnType().getKind().equals(TypeKind.VOID)) {
+            return new RxActionBuilder(name, target);
+        } else {
+            return new RxFuncBuilder(name, target);
+        }
+    }
+
 
     public String getName() {
         return name;
@@ -80,7 +88,16 @@ public abstract class RxBindingBuilder {
         }
         return classBuilder
                 .addMethod(delegationMethod(fields, context))
-                .addSuperinterface(superInterface());
+                .addSuperinterface(superInterface())
+                .addTypeVariables(typeVariables());
+    }
+
+    public List<TypeVariableName> typeVariables() {
+        return transform(target.getMethod().getTypeParameters(), new Function<TypeParameterElement, TypeVariableName>() {
+            @Override public TypeVariableName apply(TypeParameterElement typeParameterElement) {
+                return TypeVariableName.get(typeParameterElement);
+            }
+        });
     }
 
     protected abstract MethodSpec delegationMethod(Map<Element, FieldSpec> fields, Context context);
