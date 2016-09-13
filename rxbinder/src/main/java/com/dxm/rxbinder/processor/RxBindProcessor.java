@@ -92,8 +92,8 @@ public class RxBindProcessor implements RxProcessor {
         MethodSpec.Builder builder = MethodSpec.methodBuilder(name)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(superInterface);
-        context.getProcessingEnvironment().getMessager().printMessage(Diagnostic.Kind.NOTE, "valiables" + bindingClass.typeVariables);
         Set<String> names = new HashSet<>();
+        int paramsCount = 0;
         if (!target.getMethod().getModifiers().contains(Modifier.STATIC)) {
             TypeElement enclosingType = findEnclosingType(target.getMethod());
             String varName = defaultVariableName(enclosingType);
@@ -102,14 +102,14 @@ public class RxBindProcessor implements RxProcessor {
             builder.addParameter(param);
             sb.append("$N");
             obj.add(param);
+            paramsCount++;
         }
-        boolean addComma = false;
         for (VariableElement methodParam : target.getMethod().getParameters()) {
             if (null == methodParam.getAnnotation(Partial.class)) continue;
-            if (addComma) {
+            if (paramsCount >= 1) {
                 sb.append(", ");
             }
-            addComma = true;
+            paramsCount++;
             final String varName = deduplicateName(names, methodParam.getSimpleName().toString());
             names.add(varName);
             ParameterSpec param = ParameterSpec.builder(ClassName.get(methodParam.asType()), varName).build();
