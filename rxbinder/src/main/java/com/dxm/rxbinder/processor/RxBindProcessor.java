@@ -103,11 +103,13 @@ public class RxBindProcessor implements RxProcessor {
             sb.append("$N");
             obj.add(param);
         }
+        boolean addComma = false;
         for (VariableElement methodParam : target.getMethod().getParameters()) {
             if (null == methodParam.getAnnotation(Partial.class)) continue;
-            if (obj.size() > 1) {
+            if (addComma) {
                 sb.append(", ");
             }
+            addComma = true;
             final String varName = deduplicateName(names, methodParam.getSimpleName().toString());
             names.add(varName);
             ParameterSpec param = ParameterSpec.builder(ClassName.get(methodParam.asType()), varName).build();
