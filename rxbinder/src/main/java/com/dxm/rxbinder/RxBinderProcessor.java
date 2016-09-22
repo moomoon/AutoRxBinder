@@ -19,7 +19,6 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 
-import javafx.util.Pair;
 
 /**
  * Created by ants on 9/5/16.
@@ -45,7 +44,7 @@ public class RxBinderProcessor extends AbstractProcessor {
         }
         for (Pair<String, TypeSpec.Builder> packageAndType : builders.values()) {
             try {
-                JavaFile.builder(packageAndType.getKey(), packageAndType.getValue().build()).build().writeTo(processingEnv.getFiler());
+                JavaFile.builder(packageAndType.first(), packageAndType.second().build()).build().writeTo(processingEnv.getFiler());
             } catch (IOException e) {
                 processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "error when writing file: " + e.getLocalizedMessage());
             }

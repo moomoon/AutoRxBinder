@@ -3,7 +3,6 @@ package com.dxm.rxbinder;
 import com.google.common.base.CaseFormat;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
 import java.util.HashSet;
@@ -20,7 +19,6 @@ import javax.lang.model.type.TypeMirror;
 
 import static com.google.common.base.CaseFormat.LOWER_CAMEL;
 import static com.google.common.base.CaseFormat.UPPER_CAMEL;
-import javafx.util.Pair;
 
 /**
  * Created by ants on 9/7/16.

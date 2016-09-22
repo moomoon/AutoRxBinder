@@ -1,6 +1,7 @@
 package com.dxm.rxbinder.processor;
 
 import com.dxm.rxbinder.Context;
+import com.dxm.rxbinder.Pair;
 import com.squareup.javapoet.TypeSpec;
 
 import java.util.ArrayList;
@@ -9,7 +10,7 @@ import java.util.Map;
 
 import javax.lang.model.type.TypeMirror;
 
-import javafx.util.Pair;
+
 
 /**
  * Created by ants on 9/6/16.

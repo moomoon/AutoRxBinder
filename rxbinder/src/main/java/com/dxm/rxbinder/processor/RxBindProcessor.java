@@ -1,20 +1,18 @@
 package com.dxm.rxbinder.processor;
 
 import com.dxm.rxbinder.Context;
+import com.dxm.rxbinder.Pair;
 import com.dxm.rxbinder.Utils;
 import com.dxm.rxbinder.annotations.Partial;
 import com.dxm.rxbinder.annotations.RxBind;
-import com.dxm.rxbinder.rx.RxActionBuilder;
 import com.dxm.rxbinder.rx.RxBindTarget;
 import com.dxm.rxbinder.rx.RxBindingBuilder;
-import com.dxm.rxbinder.rx.RxFuncBuilder;
 import com.google.common.base.CaseFormat;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import com.squareup.javapoet.TypeVariableName;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -28,9 +26,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.tools.Diagnostic;
 
 import static com.dxm.rxbinder.Utils.deduplicateMethodName;
 import static com.dxm.rxbinder.Utils.deduplicateName;
@@ -39,7 +35,6 @@ import static com.dxm.rxbinder.Utils.defaultVariableName;
 import static com.dxm.rxbinder.Utils.findEnclosingType;
 import static com.dxm.rxbinder.Utils.findOrCreateBindingBuilder;
 import static com.dxm.rxbinder.Utils.findTopLevelType;
-import javafx.util.Pair;
 
 /**
  * Created by ants on 9/6/16.
@@ -55,9 +50,9 @@ public class RxBindProcessor implements RxProcessor {
             final RxBindTarget target = new RxBindTarget(bind, methodElement);
             final TypeElement type = findTopLevelType(methodElement);
             final Pair<String, TypeSpec.Builder> packageAndTypeBuilder = findOrCreateBindingBuilder(builders, type);
-            final Pair<MethodSpec, TypeSpec> binding = createBinding(packageAndTypeBuilder.getValue().build(), target, context);
-            packageAndTypeBuilder.getValue().addType(binding.getValue());
-            packageAndTypeBuilder.getValue().addMethod(binding.getKey());
+            final Pair<MethodSpec, TypeSpec> binding = createBinding(packageAndTypeBuilder.second().build(), target, context);
+            packageAndTypeBuilder.second().addType(binding.second());
+            packageAndTypeBuilder.second().addMethod(binding.first());
         }
     }
 
