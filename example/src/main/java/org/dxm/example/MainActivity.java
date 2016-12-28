@@ -36,14 +36,19 @@ public class MainActivity extends Activity {
     @RxBind
     public <A, B> List<B> map(List<A> list, @Partial Func1<A, B> transform) {
         List<B> result = new ArrayList<>();
-        for (A a: list) result.add(transform.call(a));
-        return result;
-    }
-    @RxBind
-    public static <A, B> List<B> map1(List<A> list, @Partial Func1<A, B> transform) {
-        List<B> result = new ArrayList<>();
-        for (A a: list) result.add(transform.call(a));
+        for (A a : list) result.add(transform.call(a));
         return result;
     }
 
+    @RxBind
+    public static <A, B> List<B> map1(List<A> list, @Partial Func1<A, B> transform) {
+        List<B> result = new ArrayList<>();
+        for (A a : list) result.add(transform.call(a));
+        return result;
+    }
+
+    @RxBind
+    public static void test() throws Throwable {
+        throw new Throwable();
+    }
 }

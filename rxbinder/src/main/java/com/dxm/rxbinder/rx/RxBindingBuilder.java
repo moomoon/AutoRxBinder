@@ -50,6 +50,7 @@ public abstract class RxBindingBuilder {
     private static final String RUNTIME_EXCEPTION_NAME = "java.lang.RuntimeException";
     private static final String EXCEPTION_NAME = "java.lang.Exception";
     private static final String OBJECT_NAME = "java.lang.Object";
+    private static final String THROWABLE_NAME = "java.lang.Throwable";
 
     protected RxBindingBuilder(String name, RxBindTarget target) {
         this.target = target;
@@ -136,7 +137,7 @@ public abstract class RxBindingBuilder {
         }
         final TryBlock.Builder blockBuilder = TryBlock.builder();
         for (TypeMirror throwableType : target.getMethod().getThrownTypes()) {
-            if (!shouldBeCaught(throwableType, context)) continue;;
+            if (!shouldBeCaught(throwableType, context)) continue;
             blockBuilder.addCatch((TypeElement) context.getProcessingEnvironment().getTypeUtils().asElement(throwableType), exception);
         }
         return blockBuilder.build();
@@ -150,7 +151,9 @@ public abstract class RxBindingBuilder {
             case OBJECT_NAME:
                 return false;
             case EXCEPTION_NAME:
+            case THROWABLE_NAME:
                 return true;
+
         }
         for (TypeMirror superType : types.directSupertypes(type)) {
             TypeElement superElement = (TypeElement) types.asElement(superType);
