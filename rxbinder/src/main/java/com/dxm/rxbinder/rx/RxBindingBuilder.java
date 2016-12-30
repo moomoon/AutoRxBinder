@@ -2,7 +2,10 @@ package com.dxm.rxbinder.rx;
 
 import com.dxm.rxbinder.Context;
 import com.dxm.rxbinder.TryBlock;
+import com.dxm.rxbinder.TypeVariableItem;
 import com.dxm.rxbinder.annotations.Partial;
+import com.dxm.variable.Val;
+import com.dxm.variable.Variables;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Function;
 import com.squareup.javapoet.ArrayTypeName;
@@ -31,7 +34,9 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.MirroredTypeException;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.Types;
+import javax.tools.Diagnostic;
 
 import static com.dxm.rxbinder.Utils.deduplicateName;
 import static com.dxm.rxbinder.Utils.defaultVariableName;
@@ -87,10 +92,13 @@ public abstract class RxBindingBuilder {
         if (constructor.parameters.size() > 0) {
             classBuilder.addMethod(constructor);
         }
+//        context.getProcessingEnvironment().getMessager().printMessage(Diagnostic.Kind.NOTE, "variables = " + typeVariables());
         return classBuilder
                 .addMethod(delegationMethod(fields, context))
                 .addSuperinterface(superInterface())
+//                .addTypeVariables(uniqueTypeVariables.get().values());
                 .addTypeVariables(typeVariables());
+//                .addTypeVariable(TypeVariableName.get("T", TypeName.get(RuntimeException.class), TypeName.get(String.class)));
     }
 
     public List<TypeVariableName> typeVariables() {

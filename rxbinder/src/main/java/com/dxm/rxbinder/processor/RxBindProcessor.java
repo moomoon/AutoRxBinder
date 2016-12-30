@@ -11,10 +11,14 @@ import com.google.common.base.CaseFormat;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
+import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.TypeVariableName;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +31,7 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
+import javax.tools.Diagnostic;
 
 import static com.dxm.rxbinder.Utils.deduplicateMethodName;
 import static com.dxm.rxbinder.Utils.deduplicateName;
@@ -44,7 +49,7 @@ public class RxBindProcessor implements RxProcessor {
     @Override
     public void process(Map<TypeMirror, Pair<String, TypeSpec.Builder>> builders, Context context) {
         for (Element element : context.getRoundEnvironment().getElementsAnnotatedWith(RxBind.class)) {
-            if (element.getKind() != ElementKind.METHOD) return;
+            if (element.getKind() != ElementKind.METHOD) context.getProcessingEnvironment().getMessager().printMessage(Diagnostic.Kind.ERROR, "RxBind cannot be annotated to " + element.getKind());
             RxBind bind = element.getAnnotation(RxBind.class);
             final ExecutableElement methodElement = (ExecutableElement) element;
             final RxBindTarget target = new RxBindTarget(bind, methodElement);
@@ -57,6 +62,9 @@ public class RxBindProcessor implements RxProcessor {
     }
 
     private static Pair<MethodSpec, TypeSpec> createBinding(TypeSpec containerClass, RxBindTarget target, Context context) {
+        TypeElement clazz = findEnclosingType(target.getMethod());
+        context.getProcessingEnvironment().getMessager().printMessage(Diagnostic.Kind.NOTE, "clazz = " + clazz.getSimpleName().toString() + " nestingType " + clazz.getNestingKind());
+
         final String name = target.getBind().name();
         String binderClassName = name.isEmpty() ? bindingClassNameFor(target) : Utils.bindingClassNameFor(name);
         String binderMethodName = name.isEmpty() ? bindingMethodNameFor(target) : Utils.bindingMethodNameFor(name);
@@ -93,7 +101,7 @@ public class RxBindProcessor implements RxProcessor {
             TypeElement enclosingType = findEnclosingType(target.getMethod());
             String varName = defaultVariableName(enclosingType);
             names.add(varName);
-            ParameterSpec param = ParameterSpec.builder(ClassName.get(enclosingType), varName).build();
+            ParameterSpec param = ParameterSpec.builder(ParameterizedTypeName.get(enclosingType.asType()), varName).build();
             builder.addParameter(param);
             sb.append("$N");
             obj.add(param);

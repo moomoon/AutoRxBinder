@@ -126,4 +126,8 @@ public class Utils {
         System.arraycopy(classes, 1, simpleNames, 0, simpleName.length());
         return ClassName.get(packageName, simpleName, simpleNames);
     }
+
+    public static boolean elementsEqual(Element lhs, Element rhs) {
+        return true;
+    }
 }

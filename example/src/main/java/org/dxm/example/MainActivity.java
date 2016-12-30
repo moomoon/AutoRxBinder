@@ -21,34 +21,55 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
     }
 
-    @RxBind(name = "methodBinding", exception = IllegalArgumentException.class)
-    public void method(int MainActivity) throws IOException {
+//    @RxBind(name = "methodBinding", exception = IllegalArgumentException.class)
+//    public void method(int MainActivity) throws IOException {
+//
+//    }
+//
+//
+//    @RxBind
+//    public static <B extends Rect> List<B> add(List<B> list, B a) {
+//        list.add(a);
+//        return list;
+//    }
+//
+//    @RxBind
+//    public <A, B> List<B> map(List<A> list, @Partial Func1<A, B> transform) {
+//        List<B> result = new ArrayList<>();
+//        for (A a : list) result.add(transform.call(a));
+//        return result;
+//    }
+//
+//    @RxBind
+//    public static <A, B> List<B> map1(List<A> list, @Partial Func1<A, B> transform) {
+//        List<B> result = new ArrayList<>();
+//        for (A a : list) result.add(transform.call(a));
+//        return result;
+//    }
+//
+//    @RxBind
+//    public static void test() throws Throwable {
+//        throw new Throwable();
+//    }
 
+    @RxBind public static <T> T identity(T value) {
+        return value;
+    }
+}
+
+
+class Parent {
+    class Child {
+        @RxBind
+        <A>void test() {
+
+        }
     }
 
+    static class StaticChild {
+        @RxBind
+        void test() {
 
-    @RxBind
-    public static <B extends Rect> List<B> add(List<B> list, B a) {
-        list.add(a);
-        return list;
-    }
-
-    @RxBind
-    public <A, B> List<B> map(List<A> list, @Partial Func1<A, B> transform) {
-        List<B> result = new ArrayList<>();
-        for (A a : list) result.add(transform.call(a));
-        return result;
-    }
-
-    @RxBind
-    public static <A, B> List<B> map1(List<A> list, @Partial Func1<A, B> transform) {
-        List<B> result = new ArrayList<>();
-        for (A a : list) result.add(transform.call(a));
-        return result;
-    }
-
-    @RxBind
-    public static void test() throws Throwable {
-        throw new Throwable();
+        }
     }
 }
